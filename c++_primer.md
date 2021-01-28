@@ -144,6 +144,15 @@ decltype((i)) q;	//双重括号的结果永远是一个引用
 decltype(a = b) c;	//表达式都返回引用？
 ```
 
+当用decltype来获得一个函数指针类型时，必须加上一个*。
+
+当我们使用函数名字时，在需要的情况下会转化成一个指针。
+
+```c++
+multiset<Sales_data, decltype(compareIsbn)*>
+	bookstore(compareIsbn);	//&compareIsbn也可以
+```
+
 # 第三章 字符串、向量和数组
 
 ## 初始化方式
@@ -175,26 +184,15 @@ C++提供了几种不同的初始化方式，大多数情况下这些初始化�
 
 ## 显示转换
 
-```c++
-cast-name<type>(expreesion);
-```
+**reinterpret_cast**的能力仅次于类C转换。虽然它**约束了整型、浮点和枚举类型的相互转换**，但是还是支持指针和整型的转换。它也**存在转换后运行时出错的隐患**。reinterpret_cast通常为运算对象的位模式提供较低层次上的重新解释，本质依赖于机器。
 
-### static_cast
+**static_cast弥补了reinterpret_case对整型、浮点和枚举类型的相互转换的功能。**除了这些转换外，它**要求操作的参数是指针**。且已经出现C++特性限制，**要求指针转换时的类存在继承关系（void\*除外）**。它也**存在转换后运行时出错的隐患**。隐式转换是static_cast。
 
-任何具有明确定义的类型转换，只要不包含地底层const，都可以使用static_cast。
+**dynamic_cast**已经是纯的C++特性转换，**使用到了RTTI技术**。于是它**要求操作的指针类型具有多态特性**。它**解决了指针转换后使用出现运行时出错的问题**（出错返回nullptr，可能抛出std::bad_cast**）使用该方法要付出运行时计算的代价**。**如果能明确转换是安全的，建议使用static_cast方法（不使用reinterpret_cast是因为它还没体现出C++的特性）。**
 
-### const_cast
+dynamic_cast只可以用于指针之间的转换，它还可以将任何类型指针转为无类型指针，甚至可以在两个无关系的类指针之间转换。
 
-const_cast只能改变运算对象的底层const。
-
-```C++
-const char *pc;
-char *p = const_cast<char*>(pc);	//正确，但通过p写值是未定义的行为
-```
-
-### reinterpret_cast
-
-reinterpret_cast通常为运算对象的位模式提供较低层次上的重新解释，本质依赖于机器。
+**const_cast用于增加和去掉一些类型描述标志**，如const等。
 
 ### 旧式强转
 
@@ -231,8 +229,6 @@ reinterpret_cast通常为运算对象的位模式提供较低层次上的重新�
 
 initializer_list对象中的元素永远是常量值。
 
-
-
 initializer_list由编译器自动构造。
 
 ```c++
@@ -263,6 +259,22 @@ void foo(...);
 省略符形参所对应的实参无须类型检查。在第一种形式中，形参声明后面的逗号是可选的。
 
 大多数类类型的对象在传递给省略符形参时都无法正确拷贝。
+
+## 尾置返回类型
+
+```c++
+auto func(int i) -> int(*)[10] 
+```
+
+对于更复杂的定义，使用decltype更好。
+
+## 函数重载
+
+- `main`函数不能重载。
+- **重载和const形参**：
+  - 一个有顶层const的形参和没有它的函数无法区分。 `Record lookup(Phone* const)`和 `Record lookup(Phone*)`无法区分。
+  - 相反，是否有某个底层const形参可以区分。 `Record lookup(Account*)`和 `Record lookup(const Account*)`可以区分。
+- **重载和作用域**：在不同的作用域中无法重载函数名。
 
 # 第七章 类
 
@@ -327,7 +339,7 @@ myScreen.display(cout).set('*');	//错误
 
 ## 基于const的重载
 
-通过区分成员函数是否是const的，我们可以对其进行重载，原因与我们之前根据指针参数是否指向const而重载函数的原因差不多。
+通过区分成员函数是否是const**（只能是底层const）**，我们可以对其进行重载，原因与我们之前根据指针参数是否指向const而重载函数的原因差不多。
 
 因为非常量版本的函数对于常量对象是不可用的，所以我们只能在一个常量对象中调用const成员函数。另一方面，虽然可以在非常量对象上调用常量版本或非常量版本，但是显然此时非常量版本是一个更好的匹配。（对象是否是const决定了应该调用哪个版本）
 
@@ -628,7 +640,7 @@ class Screen;
 
 对于类型Screen，在它定义之前是一个不完全类型，也就是说，此时我们已知Screen是一个类类型，但是不清楚它到达包含哪些成员。
 
-不完全类型只能在非常有限的情景下使用：可以定义指向这种类型的指针或引用，也可以声明（但是不能定义）以不完全类型作为参数或者返回类型的函数。因此类允许包含指向它自身类型的引用或指针（例如链表结点定义）。
+不完全类型只能在非常有限的情景下使用(static例外）：可以定义指向这种类型的指针或引用，也可以声明（但是不能定义）以不完全类型作为参数或者返回类型的函数。因此类允许包含指向它自身类型的引用或指针（例如链表结点定义）。
 
 对于一个类来说，我们创建它的对象之前该类必须被定义过，而不能仅仅被声明。
 
@@ -754,7 +766,7 @@ Window_mgr::addScreen(const Screen& s)
 
 ## 名字查找（name lookup）
 
-1. 首先，在名字所在的块中寻找其声明语句，只考虑在名字的使用之前出现的声明。
+1. 首先，在名字所在的块中寻找其声明语句，**只考虑在名字的使用之前出现的声明。**
 2. 如果没找到，继续查找外层作用域。
 3. 如果最终没有找到匹配的声明，则程序报错。
 
@@ -824,7 +836,7 @@ ConstRef::ConstRef(int i1):i(i1), ci(i1), ri(i) {}
 
 ### 委托构造函数
 
-一个委托构造函数使用所属类的其他构造函数执行它自己的初始化过程。在委托构造函数内，成员初始值列表只有一个唯一的入口，就是类名本身。
+一个委托构造函数使用所属类的其他构造函数执行它自己的初始化过程。在委托构造函数内，成员**初始值列表**只有一个唯一的入口，就是类名本身。
 
 ```c++
 Sales_data(std::string s): Sales_data(s, 0, 0) {}
@@ -1068,7 +1080,7 @@ STL 中有用于操作迭代器的三个函数模板，它们是：
 
 ### 关联式容器迭代器失效
 
-对于关联容器(如map,  set,multimap,multiset)，删除当前的iterator，仅仅会使当前的iterator失效，只要在erase时，递增当前iterator即可。这是因为map之类的容器，使用了红黑树来实现，插入、删除一个结点不会对其他结点造成影响。erase迭代器只是被删元素的迭代器失效，但是返回值为void，所以要采用erase(iter++)的方式删除迭代器。 
+对于关联容器(如map,  set,multimap,multiset)，删除当前的iterator，仅仅会使当前的iterator失效，只要在erase时，递增当前iterator即可。这是因为map之类的容器，使用了红黑树来实现，插入、删除一个结点不会对其他结点造成影响。erase迭代器只是被删元素的迭代器失效，但是返回值为void，所以要采用**erase(iter++)**的方式删除迭代器。 
 
 map是关联容器，以红黑树或者平衡二叉树组织数据，虽然删除了一个元素，整棵树也会调整，以符合红黑树或者二叉树的规范，但是单个节点在内存中的地址没有变化，变化的是各节点之间的指向关系。
 
@@ -1152,27 +1164,221 @@ deque是一种优化了的对序列两端元素进行添加和删除操作的基
 
 # 第十章 泛型算法
 
-## for_each()
+## 概述
 
-for_each事实上是个function template。
+迭代器令算法不依赖容器。
+
+泛型算法不会执行容器操作，只执行迭代器的操作，算法永远不会改变底层容器的大小。
+
+算法不检查写操作。
+
+## begin、end函数
+
+获得指向arr首、尾后元素的指针
 
 ```c++
-template<typename InputIterator, typename Function>
-Function for_each(InputIterator beg, InputIterator end, Function f) {
-  while(beg != end) 
-    f(*beg++);
-}
-//使用
-for_each(vec1.cbegin(), vec1.cend(), 
-        [](int elem) 
-        {
-            cout << elem << "  "; 
-    });
+int arr[] = {1, 2, 3};
+find(begin(arr), end(arr), 2);
 ```
+
+## accumulate
+
+```c++
+int sum = accumulate(vec.cbegin(), vec.cend(), 0);
+```
+
+## equal
+
+```c++
+equal(r1.cbegin(), r1.cend(), r2.cbegin())
+```
+
+只接受一个迭代器来表示第二个容器的算法，都假定第二个序列至少与第一个序列一样长。
+
+## fill
+
+```c++
+fill(vec.begin(), vec.end(), 0);
+fill_n(vec.begin(), vec.size(), 0);
+```
+
+## copy
+
+```c++
+auto ret = copy(begin(a1), end(a1), begin(a2));
+```
+
+## replace
+
+```c++
+//将所有值为0的元素改为42
+replace(l.begin(), l.end(), 0, 42);
+```
+
+## unique
+
+```c++
+//重排输入范围，使得每个元素只出现一次
+//返回不重复区域之后一个位置的迭代器
+auto end_unique = unique(words.begin, words.end());
+```
+
+## transform
+
+```c++
+transform(vi.begin(), vi.begin(), vi.begin(), [](int i) {
+	return i < 0 ? -i : i;
+});
+```
+
+## stable_sort
+
+```c++
+stable_sort(words.begin, words.end(), isShorter);
+```
+
+stable_sort维持相等元素额度原有顺序。
 
 ## lambda表达式
 
+谓词：可调用对象（函数、函数指针、重载函数调用运算符的类、lambda表达式）
 
+```c++
+auto f1 = [](int i)->int {return i;};
+//参数列表和返回类型可以忽略
+auto f2 = [] {return i;};
+```
+
+捕获列表：lambda所在函数中定义的局部变量的列表。
+
+捕获列表只用于局部非static变量，其他变量lambda可以直接使用。
+
+如果未指定返回类型，自动推导只含单一return语句的lamdda，否则返回类型为void。
+
+lamdda不能有默认参数。
+
+当定义lambda时，编译器生成一个与lambda对应的新的类类型，该类型包含捕获列表中的数据成员。
+
+```c++
+//=:值捕获、&引用捕获（此时由捕获的数据成员编译器自动推导）
+auto wc = find_if(words.begin(), words.end(), [=](const string &s) {
+	return s.size() >= sz;
+});
+//混合使用时，第一个元素必须是=或者&，显示捕获和隐式捕获必须使用不同方式
+//[&, args]
+//[=, &args]
+```
+
+引用捕获的变量是否可以修改依赖于此引用指向的是否是const类型。
+
+### 可变lambda
+
+默认情况下，对于值被拷贝的变量，lamdda不会改变其值，如果希望改变，加上mutable。
+
+```c++
+auto f = [v1]() mutable {return ++v1;};
+```
+
+对于只在一两个地方使用的简单操作，lambda表达式是最有用的。如果在多处使用，通常应该定义一个函数。
+
+lambda解决了向泛型算法传递一元谓词的问题。
+
+## bind
+
+可以将bind函数看作一个通用的函数适配器。
+
+bind接受一个可调用的对象，生成一个新的可调用对象来“适应”原对象的参数列表。
+
+bind也用于向泛型算法传递一元谓词的问题。
+
+```c++
+//占位符_n对应返回可调用对象的参数，定义在std::placeholders
+//用bind重排参数顺序
+//bind第一个参数为可调用对象，后面依次为该对象参数
+auto g = bind(f, a, b, _2, c, _1);
+g(_1, _2);
+//相当于
+f(a, b, _2, c, _1);
+auto wc = find_if(words.begin(), words.end(), bind(check_size, _1, sz));
+```
+
+bind传递参数只能通过值传递，无法传递引用。
+
+### ref、cref
+
+ref、cref函数返回一个对象，包含给定引用，该对象可以拷贝。
+
+## inserter
+
+front_inserter和back_inserter调用push_back和push_front。
+
+inserter类似于：
+
+```c++
+*it = val;
+//相当于
+it = c.insert(it, val);
+++it;
+//insert不同于上述
+```
+
+## iostream迭代器
+
+```c++
+istream_iterator<int> int_it(cin);
+//用空迭代器充当eof，一旦关联的流遇到文件尾或IO错误
+//和空迭代器相等
+istream_iterator<int> int_eof;
+
+//输出流迭代器可以指定额外字符串
+ostream_iterator<int> out_int(os, "\n");
+*out_int = val;
+```
+
+骚操作：
+
+```c++
+vector<int> vec(in_iter, eof);
+copy(vec.begin(), vec.end(), out_int);
+```
+
+流迭代器要读取的类型必须重载<<或>>。
+
+## 特定容器算法
+
+对于list和forward_list，应该优先使用成员函数版本的算法（可以通过指针改变链接而不是交换它们的值）。
+
+链表特有版本算法会改变底层容器，算法不会。
+
+# 第十一章 关联容器
+
+## 有序容器
+
+multimap、multiset允许多个元素具有相同的关键字。
+
+对于有序容器，关键字类型必须定义元素比较方法，默认使用<运算符，我们也可以用自己定义的操作来代替。
+
+不能改变map和set的关键字（map::value_type为pair<const key_type, mapped type>，set::value_type为const key_type），可以调用erase删除，erase(key_type)返回实际删除的元素数量。
+
+当使用一个迭代器遍历有序容器时，迭代器按关键字升序遍历元素。
+
+创建pair最简单的方法是使用花括号初始化列表。
+
+insert和emplace返回一个pair，包含指向新插入元素的迭代器和bool。
+
+如果关键字不在map中，使用下标运算符会创建一个元素并插入到map中。
+
+如果multimap和multiset中有多个元素具有给定的关键字，则这些元素在容器中会相邻存储。
+
+如果元素不在multimap中，lower_bound和upper_bound会返回相等的迭代器（也可以使用equal_range)。
+
+## 无序容器
+
+对于无序容器，使用哈希函数和==运算符。
+
+无序容器的输出通常会与有序容器的版本不同。
+
+我们不能直接定义关键字类型为自定义类类型的无序容器，需要提供自己的hash模板版本。
 
 # 第十二章 动态内存
 
@@ -1210,6 +1416,17 @@ if (!(p.unique()))
 
 
 ## 使用自定义的释放操作
+
+在shared_ptr的生存期中，我们可以随时改变删除器类型，而unique_ptr需要在模板参数中指定。
+
+shared_ptr可能的实现（不直接保存可调用对象）：
+
+```c++
+//del为一个指针
+del ? del(p) : delete p;
+```
+
+
 
 ```c++
 connection connect(desctination*);	//打开连接
@@ -1377,4 +1594,22 @@ new operator是c++内建的，无法改变其行为；而operator new 是可以�
 当然你可以显示的调用:: operator new和:: operator delete强制使用全局的库函数。
 
 # 第十五章 面向对象程序设计
+
+# 第十六章 模板与泛型编程
+
+## 模板编译
+
+只有当我们实例化出模板的一个特定版本时，编译器才会产生代码。
+
+大多数编译错误在实例化期间报告。
+
+为了生成一个实例化版本，编译器需要掌握模板的定义，所以模板的头文件通常既包含声明也包含定义。
+
+（只要让编译器能够在某一次编译时看到模板函数的定义并将其实例化出来，最后把这些编译得到的目标文件链接在一起，就不会有模板函数链接失败的问题。例如可以：（1）将模板函数的定义直接写在头文件内；（2）可以写在源文件B内，并将这个源文件B包含在源文件A内；（3）在源文件A内想办法触发这个模板函数的实例化（例如可以显式实例化：template void  f<int>();）在编译A时将实例化结果写入生成的.obj文件内，让B的.obj文件与A的.obj文件链接时能够找到实例化结果。
+
+​     上面的三种方法，前两种都是在编译期让所有用到模板函数的地方直接实例化函数定义，这样做会使每一个编译结果都包含实例化结果，导致目标文件较大，链接的时候需要把重复的实例化定义去重，编译链接的时间也会长一些。使用第三种方法，可以用一个特定的.cc文件显示实例化所有会被用到的模板实例，单独编译这个文件，最后让它参与链接，用这种方法，不会产生巨大的头文件，加快编译速度。而且头文件本身也显得更加“干净”和更具有可读性。但这个方法不能得到惰性实例化的好处，即它将显式地生成所有的成员函数，另外还要维护一个这样的文件。所以为了容易使用，几乎总是在头文件中放置全部的模板声明和定义。）
+
+### call f
+
+call f这行指令其实并不是这样的，它实际上是所谓的stub，也就是一个jmp  0x23423[这个地址可能是任意的，然而关键是这个地址上有一行指令来进行真正的call  f动作。也就是说，这个.obj文件里面所有对f的调用都jmp向同一个地址，在后者那儿才真正”call”f。这样做的好处就是连接器修改地址时只要对后者的call XXX地址作改动就行了。
 
