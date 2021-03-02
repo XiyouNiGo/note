@@ -181,6 +181,8 @@
 # 将文件间的编译依存关系降至最低
 
 + 连串编译依存关系会对许多项目造成难以形容的灾难。
++ 如果使用reference或pointer可以完成任务，就不要使用objcet。你可以只靠一个类型声明式就定义出指向该类型的reference和pointer；但如果定义某类型的object，就需要用到该类型的定义式。
++ 为声明式和定义式提供不同的头文件。
 
 # 确定你的public继承塑模出is-a关系
 
@@ -191,4 +193,85 @@
 # 避免遮掩继承而来的名称
 
 + 为了让被遮掩的名称再见天日，可使用using声明式或转交函数。
+
+# 区分接口继承和实现继承
+
++ 我们可以为pure virtual函数提供定义，但调用它的唯一途径是“调用时明确指出其class名称”。
++ pure virtual函数只具体指定接口继承，impure virtual函数具体指定接口继承及缺省实现继承，non-virtual函数具体指定接口继承以及强制性实现继承。
+
+# 考虑virtual函数以外的其他选择
+
++ Non-Virtual Interface手法实现Template Method模式：
+
+  保留原函数为public成员函数，但让它成为non-virtual，并调用一个private virtual函数进行实际工作。
+
+  优点：wrapper确保得以在一个virtual函数被调用之前设定适当场景，并在调用结束之后清理场景。
+
++ Function Pointers实现Strategy模式：
+
+  构造函数接受一个函数指针，同一类型的不同实体可以有不同的函数，实体的函数可在运行期变更。
+
++ tr1:function完成Strategy模式：
+
+  该对象可持有任何callable entity（函数指针、函数对象或成员函数指针）。
+
+# 绝不重新定义继承而来的non-virtual函数
+
++ 适用于基类对象的每一件事，也适用于派生类对象，因为每个派生类对象都是一个基类对象。如果派生类重新定义non-virtual函数，你的设计便出现矛盾。
+
+# 绝不重新定义继承而来的缺省参数值
+
++ 静态绑定下不会继承缺省参数值，动态绑定会（缺省参数不是动态绑定的，这是C++做出的取舍）。
++ 解决方法是NVI手法：我们可以让public non-virtual函数指定缺省参数，而private virtual函数负责真正的工作。
+
+# 通过复合塑模出has-a或“根据某物实现出”
+
++ 在应用域，复合意味has-a。在实现域，复合意味着is-implemented-in-terms-of。
+
+# 明智而审慎地使用private继承
+
++ 由private base class继承而来的所有成员，在derived class中都会变成private属性。
++ 尽可能使用复合，必要时才使用private继承（当derived class需要访问protected base class的成员，或需要重新定义继承而来的virtual函数，这么设计是合理的）。
++ 如果是继承，派生类被编译时基类必须可见；如果只是内含一个指针，可以只带一个简单的声明式。
++ 由于技术上的理由，C++规定凡是规定对象都必须有非零大小（通常C++官方勒令默默安插一个char到空对象内）。因此和复合不同（还有可能有齐位需求），private继承可以造成empty base最优化。
+
+# 明智而审慎地使用多重继承
+
++ 多重继承比单一继承复杂。它可能导致新的歧义性，以及对virtual继承的需要。
++ virtual继承会增加大小、速度、初始化复杂度等等成本。
++ 多重继承的确有正当用途。其中一个情节涉及“public继承某个Interface class”和“private继承某个协助实现的class”的两相组合。
+
+# 了解隐式接口和编译期多态
+
+# 了解typename的双重意义
+
++ template内出现的名称如果相依于某个template参数，称之为从属名称。
++ 任何时候当你想要在template中指出一个**从属类型名称**，就必须在紧邻它的前一个位置放上关键字typename。
++ typename只被用来检验从属类型。这一规则的例外是，typename不可以出现在base classes list内，也不可在成员初值列作为base class修饰符。
+
+# 学习处理模板化基类内的名称
+
++ 编译器知道base class template有可能被特化，而那个特化版本可能不提供和一般性template相同的接口。因此它往往拒绝在templatized base class内寻找继承而来的名称。
++ 有三个办法：
+  + 第一是在base class函数调用动作之前加上“this->”。
+  + 第二是使用using声明式（这里的情况并不是base class名称被derived class名称遮掩，而是编译器不进入base class作用域内查找，于是我们通过using告诉它，请它那么做）。
+  + 第三个做法是，明确指出被调用的函数位于base class内（如果调用virtual函数会关闭“virtual绑定行为”。
+
+# 将与参数无关的代码抽离templates
+
++ 因非类型模式参数而造成的代码膨胀，往往可消除，做法是以函数参数或class成员变量替换template参数。
++ 因类型参数而造成的代码膨胀，往往可降低，做法是让带有完全相同二进制表示的具现类型共享实现码（许多平台上long/int、指针等等）。
+
+# 运用成员函数模板接受所有兼容类型
+
+# 请使用traits class表现类型信息
+
++ Traits class使得“类型相关信息”在编译期可用。它们以templates和“templates特化”完成实现。
++ 整合重载技术后，traits class有可能在**编译期**对类型执行if...else测试。
+
+
+
+
+
+
 
