@@ -237,11 +237,13 @@
 
 # 明智而审慎地使用多重继承
 
-+ 多重继承比单一继承复杂。它可能导致新的歧义性，以及对virtual继承的需要。
++ 多重继承比单一继承复杂。它可能导致新的歧义性（菱形继承），以及对virtual继承的需要。
 + virtual继承会增加大小、速度、初始化复杂度等等成本。
 + 多重继承的确有正当用途。其中一个情节涉及“public继承某个Interface class”和“private继承某个协助实现的class”的两相组合。
 
 # 了解隐式接口和编译期多态
+
++ “以不同的template参数具现化function template”会导致调用不同的函数，就便是所谓的编译期多态。
 
 # 了解typename的双重意义
 
@@ -264,14 +266,71 @@
 
 # 运用成员函数模板接受所有兼容类型
 
++ 真实指针做得很好的一件事是，支持隐式转换。但是，同一个template的不同具现体之间并不存在什么与生俱来的固有关系。
++ 成员模板并不改变语言规则，如果程序需要一个copy构造函数，你却没有声明它，编译器会暗自为你生成一个。所以想要控制copy构造的方方面面，必须同时声明泛化copy构造函数和“正常的”copy构造函数。
+
+# 需要类型转换时请为模板定义非成员函数
+
++ 请将那些函数定义为“class template内部的friend函数”。
+
 # 请使用traits class表现类型信息
 
 + Traits class使得“类型相关信息”在编译期可用。它们以templates和“templates特化”完成实现。
 + 整合重载技术后，traits class有可能在**编译期**对类型执行if...else测试。
 
+# 认识template元编程
 
++ TMP是编写template-based C++程序并执行于**编译期**的过程。
++ TMP可将工作从运行期转移到编译期。这导致的一个结果是，某些错误原本通常在运行期才能侦测到，现在可在编译期找出来。
++ 程序如果使用TMP，其编译时间可能远长于不使用TMP的对应版本。
++ traits解法就是TMP。
++ C++模板参数不可以是double。
++ TMP可被用来生成“基于政策选择组合”的客户定制代码，也可用来避免生成对某些特殊类型并不适合的代码。
 
+# 了解new-handler的行为
 
++ 当operator new抛出异常以反映一个未获满足的内存需求之前，它会先调用new-handler（使用set_new_handler指定）。
++ 一个设计良好的new-handler必须做以下事情：
+  + 让更多内存可被使用。
+  + 安装另一个new-handler。
+  + 卸除new-handler（将null传给set_new_handler）。一旦没有安装任何new-handler，operator new会在内存分配不成功时抛出异常。
+  + 抛出bad_alloc的异常。
+  + 不返回，通常调用abort或exit。
+
++ 实现class专属之new-handler：令每一个class提供自己的set_new_handler和operator new即可。operator new确保在分配class对象内存的过程中以class专属之new-handler替换global new-handler。
+
+# 了解new和delete的合理替换时机
+
++ 需要自定义new和delete的原因：
+
+  + 用来检测运用上的错误：自定义operator new，超额分配内存，以额外空间放置特定的byte patterns。自定义operator delete得以检查上述签名是否原封不动，若否就表示在分配区的某个生命时间点发生了overrun或underrun。
+  + 为了强化效能。
+  + 为了收集使用上的数据。
+  + 为了降低缺省内存管理器带来的空间额外开销（cookies）。
+  + 为了弥补缺省分配器中的非最佳齐位：x86体系结构上double的访问最是快速，但编译器自带的operator new并不保证对动态分配而得的double采取8-byte齐位。
+
+  # 编写new和delete时需固守常规
+
+  + operator new应该内含一个无穷循环，并在其中尝试分配内存，如果它无法满足内存需求，就应该调用new-handler。它也应该有能力处理0 bytes申请。Class专属版本则还应该处理“比正确大小更大的（错误）申请”。
+  + operator delete应该在收到null指针时不做任何事。Class专属版本则还应该处理“比正确大小更大的（错误）申请”。
+
+  # 写了placement new也要写placement delete
+
+  + 构造函数抛出异常时，运行期系统寻找“参数个数和类型都与operator new相同”的某个operator delete，如果找不到就什么也不做。
+  + 如果没有这样做，你的程序可能会发生内存泄露。
+
+  # 不要轻忽编译器的警告
+
+  + 努力在你的编译器的最高警告级别下争取“无任何警告”的荣誉。
+  + 不同的编译器对待事情的态度并不相同。
+
+  # 让自己熟悉包括TR1在内的标准程序库
+
+  + TR1添加了智能指针、一般化函数指针、hash-based容器、正则表达式以及另外10个组件的支持。
+
+  # 让自己熟悉Boost
+
+  + Boost在C++标准化过程中扮演深具影响力的角色。
 
 
 
