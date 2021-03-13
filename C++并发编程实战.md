@@ -89,5 +89,17 @@
   + 使用固定顺序获取锁。
   + 使用层次锁结构。当代码试图对互斥量上锁，而低层已持有该层锁时，不允许锁定。因此锁的顺序只能先锁层级高的锁再锁层级低的锁。
   
-+ std::unique_lock 实例不会总与互斥量的数据类型相关，使用起来要比 std:lock_guard 更加灵活。
++ std::unique_lock 实例不会总与互斥量的数据类型相关，使用起来要比 std:lock_guard 更加灵活。 std::unique_lock 会占用比较多的空间，并且比 std::lock_guard 稍慢一些（需要维护锁的状态）。当实例中没有互斥量时，析构函数就不能去调用unlock()，这个标志可以通过owns_lock()成员变量进行查询。 std::unique_lock 是可移动，但不可赋值的类型。
+
++ 一般情况下，尽可能将持有锁的时间缩减到最小。
+
++ 双重检查锁模式：解决Singleton实际上只有第一次实例创建的时候才需要加锁。new operator和reset可能发生**指令重排**，不安全。C++标准库提供std::once_flag 和 std::call_once 来处理这种情况。
+
++ 用 `std::unique_lock` 与 `std::lock_guard` 管理排他性锁定。
+
+  用 `std::shared_lock` 管理共享锁定。
+
+# 同步操作
+
+
 
