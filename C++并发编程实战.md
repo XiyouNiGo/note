@@ -101,5 +101,15 @@
 
 # 同步操作
 
-
++ std::condition_variable_any 更加通用，不过在性能和系统资源的使用方面会有更多的开销，所以通常会将 std::condition_variable 作为首选类型。
++ std::future提供访问异步操作结果的机制。std::future 只能与指定事件相关联，而 std::shared_future 就能关联多个事件。future对象本身并不提供同步访问。
++ 当不着急让任务结果时，可以使用 std::async 启动一个异步任务。std::async 会返回一个 std::future 对象。get()等价与先调用wait()再调用get()。 std::launch::defered 表明函数调用延迟到wait()或get()函数调用时才执行，std::launch::async 表明函数必须在其所在的独立线程上执行。当函数调用延迟，可能不会再运行。
++ std::packaged_task<> 会将future与函数或可调用对象进行绑定。当 std::packaged_task 作为函数调用时，实参将由函数调用操作符传递至底层函数，并且返回值作为异步结果存储在 std::future 中。
++  std::promise/std::future 对提供一种机制：future可以阻塞等待线程，提供数据的线程可以使用promise对相关值进行设置，并将future的状态置为“就绪”。
++ 任何情况下，当future的状态还不是“就绪”时，调用 std::promise 或 std::packaged_task 的析构函数，将会存储一个与 std::future_errc::broken_promise 错误状态相关的 std::future_error 异常。
++ 当调用抛出一个异常时，这个异常就会存储到future中，之后调用get()会抛出已存储的异常。
++  std::current_exception() 来检索抛出的异常，可用 std::copy_exception() 作为替代方案， std::copy_exception() 会直接存储新的异常而不抛出。
++ 因为 std::future 是只移动的，所以其所有权可以在不同的实例中互相传递，但只有一个实例可以获得特定的同步结果，而 std::shared_future 实例是可拷贝的，所以多个对象可以引用同一关联期望值的结果。
++ 为了在多个线程访问一个独立对象时避免数据竞争，必须使用锁来对访问进行保护。当每个线程都通过自己拥有的 std::shared_future 对象获取结果，那么多个线程访问共享同步结果就是安全的。
++ 函数化编程(functional programming)是一种编程方式，函数结果只依赖于传入函数的参数。使用相同的参数调用函数，不管多少次都会获得相同的结果，主要思想是把运算过程尽量写成一系列嵌套的函数调用。函数式编程不需要考虑"死锁"（deadlock），因为它不修改变量，所以根本不存在"锁"线程的问题。
 
