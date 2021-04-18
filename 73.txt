@@ -1,0 +1,50 @@
+为 isula inspect 提供 -s, --size 子命令，当查询的对象为容器时展示文件大小("SizeRw"、"SizeRootFs"等) CMD_OPT_TYPE_BOOL
+为 isula inspect 提供 --type 子命令，对于指定的type(container、image等)进行查询 CMD_OPT_TYPE_STRING
+
+volume、network
+
+-s对image无效
+
+CI/test_cases/basic_cases/images.bash
+
+$ docker inspect -s --type con hello-world
+"con" is not a valid value for --type
+
+$ docker inspect -s --type image eb8f7317327f
+Error: No such image: eb8f7317327f
+
+main -> run_command -> cmd_inspect_main
+
+command_parse_args {command_parse_short_arg、command_parse_long_arg}
+    /* no arguments */
+    CMD_OPT_TYPE_BOOL,		无用？bool类型，作为附加选项，设置client_arguments中对应标志 ，案例：ps --all
+    CMD_OPT_TYPE_BOOL_FALSE,	bool类型，通过util_str_to_bool进行转换并保存到data中，案例：logs --debug
+    /* required arguments */
+    CMD_OPT_TYPE_STRING,		字符串类型，只使用一次，案例：ps --format
+    CMD_OPT_TYPE_STRING_DUP,	字符串类型，通过strdup()动态保存到data中供多次使用，案例：login --user
+    CMD_OPT_TYPE_CALLBACK		保留类型，需经过cb处理才可使用，案例：restart --time
+
+command_option_t.small = 0 -> print_options中归类到上一个small!=0的选项
+print_common_help中qsort会进行排序，排不到-s后面
+
+client_inspect：调用client_inspect_container、client_inspect_image检查容器、镜像（重头戏）
+
+默认：container -> image
+result != 0 -> 失败
+找不到 -> 重新分配response，再找
+找到 -> 判断response，复制到res_json
+默认 找到->goto check 找不到->继续
+特定 找到->goto check 找不到->goto out
+
+增加宏INSPECT_STATUS_NO_SUCH_OBJECT、INSPECT_STATUS_NO_SUCH_TYPE来区分错误类型
+
+ContainerInspect：ClientBase
+response->json
+container_inspect
+
+怎么传参数？？
+
+overlay2/overlay -> 联合挂载到merged
+work： 工作目录（完成copy-on-write）
+overlay: lowerdir只有一层，只挂载这一层 通过硬链接共享文件，硬链接超过上限无法创建容器
+overlay2: 每一层完全独立，挂载多层（link中记录、diff容器层）
