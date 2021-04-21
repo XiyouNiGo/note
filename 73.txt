@@ -44,7 +44,15 @@ container_inspect
 
 怎么传参数？？
 
+每层的diff即是文件系统在统一挂载时的挂载点
 overlay2/overlay -> 联合挂载到merged
 work： 工作目录（完成copy-on-write）
 overlay: lowerdir只有一层，只挂载这一层 通过硬链接共享文件，硬链接超过上限无法创建容器
 overlay2: 每一层完全独立，挂载多层（link中记录、diff容器层）
+LowerDir对应的是容器的只读镜像层；diff
+UpperDir为容器的可读写层； diff
+MergedDir为底层只读镜像层和上层可读写容器层的统一视图。merged
+WorkDir
+每层的diff即是文件系统在统一挂载时的挂载点
+link文件描述了该层标识符的精简版
+试一下docker history
