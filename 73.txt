@@ -69,6 +69,9 @@ isula_inspect_request、isula_inspect_response
 daemon:
 回调函数 container_inspect_cb -> inspect_container_helper -> inspect_container 交给container_inspect_generate_json生成容器json
 挂载点 mount_point_to_inspect
+类：ContainerServiceImpl
+inspect_request_from_grpc中获得变量
+container_callback_init设置回调（container_inspect_cb）
 
 struct：
 container_inspect
@@ -80,6 +83,7 @@ src/cmd/isula/stream/exec.c
 --------------------------------------------------------
 lcr：
 在src/json/schema/container/inspect-request.json里面加，直接整到/usr/local
+/usr/local/include/isula_libutils/container_inspect.h中container_inspect增加size_rw，size_rootfs
 
 rootfs.h?
 
