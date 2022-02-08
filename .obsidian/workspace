@@ -1,0 +1,104 @@
+{
+  "main": {
+    "id": "1e55be5ad828d123",
+    "type": "split",
+    "children": [
+      {
+        "id": "ac3f17af512df490",
+        "type": "leaf",
+        "state": {
+          "type": "markdown",
+          "state": {
+            "file": "Mysql实战45讲.md",
+            "mode": "source",
+            "source": false
+          }
+        }
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "a090e43789eeecf4",
+    "type": "split",
+    "children": [
+      {
+        "id": "5470e0de3460535f",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "603437c217cf8582",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {}
+            }
+          },
+          {
+            "id": "fa247a585d274ef6",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "right": {
+    "id": "d31fbca3296028b3",
+    "type": "split",
+    "children": [
+      {
+        "id": "adab8314a75e87dd",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "dd68bfc19f979c1c",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "Mysql实战45讲.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "active": "ac3f17af512df490",
+  "lastOpenFiles": [
+    "Mysql实战45讲.md",
+    "Kubenetes.assets/image-20200520154628679.png.md",
+    "算法.md",
+    "图解网络.md",
+    "C++并发编程实战.md",
+    "muduo.md",
+    "README.md",
+    "TCPIP详解卷一.md",
+    "Kubernetes in Action中文版 ,七牛容器云团队译@www.java1234.com .pdf",
+    "design_patterns.md"
+  ]
+}
